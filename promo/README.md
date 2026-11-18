@@ -1,6 +1,6 @@
 # 大肥鱼宣传片 / 封面
 
-- `film_pet.py` —— 4096×2560 @ 60fps、49.5 秒宣传片。画面全部 QPainter 现画，宠物帧从上游 640×360 WebM 现抽。
+- `film_pet.py` —— 4096×2560 @ 60fps、49.5 秒浅色宣传片。画面全部 QPainter 现画，宠物帧从上游 640×360 WebM 现抽。
 - `pet_music.py` —— 原创配乐：Am–F–C–G、92 BPM，含铺底、分解和弦、软底鼓、侧链、混响与一条五声音阶主旋律；按场景分段。
 - `covers_pet.py` —— 六种封面构图：16:9 / 16:10 / 4:3 / 3:4 / 9:16 / 1:1，输出到 `store/covers/`。
 - `timeline.py` —— 场景时间轴，配乐和视频共用。
@@ -17,7 +17,7 @@ python3 -I promo/covers_pet.py                            # 六种封面
 
 产物：
 
-- `promo/deepseek-pet-promo-4k60.mp4`
+- `promo/deepseek-pet-promo-4k60.mp4`（仅本地保留，不上传 GitHub）
 - `store/covers/deepseek-pet-cover-*.png`
 - `store/bilibili-cover.png`（1146×717）
 - `store/douyin-cover.png`（1080×1920）
