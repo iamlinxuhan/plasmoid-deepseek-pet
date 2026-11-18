@@ -4,3 +4,5 @@ build/
 *.plasmoid
 __pycache__/
 *.pyc
+promo/*.mp4
+tools/petmask/moc_petmask.cpp

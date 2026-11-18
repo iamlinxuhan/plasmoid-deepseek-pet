@@ -1,0 +1,3 @@
+module petmask
+plugin petmask
+classname PetMaskPlugin

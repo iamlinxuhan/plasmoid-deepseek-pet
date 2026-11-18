@@ -18,6 +18,8 @@ QW.Window {
     property bool petVisible: true
     // 供自动化测试/外部脚本读取宠物实例。
     property var petItem: pet
+    property var menuWindowRef: menuWindow
+    property var maskLoaderRef: maskLoader
     signal configureRequested()
 
     // 气泡画在鱼头顶上方；Layer Shell 窗口要在上方留出这块透明画布，
@@ -52,6 +54,9 @@ QW.Window {
         layerMode: true
         screenWidth: Screen.width
         screenHeight: Screen.height
+        workWidth: Screen.desktopAvailableWidth
+        workHeight: Screen.desktopAvailableHeight
+        bottomInset: 56
         topReserve: win.bubbleReserve
         petSize: win.petConfig.petSize !== undefined ? win.petConfig.petSize : 420
         allowRoam: win.petConfig.allowRoam !== undefined ? win.petConfig.allowRoam : true
@@ -67,7 +72,65 @@ QW.Window {
         cpuUsage: win.petConfig.cpuUsage !== undefined ? win.petConfig.cpuUsage : 0
         memUsage: win.petConfig.memUsage !== undefined ? win.petConfig.memUsage : 0
         onConfigureRequested: win.configureRequested()
+        onMenuRequested: function (px, py) { win.toggleMenu(px, py); }
+        onMenuDismissRequested: menuWindow.closeMenu()
     }
 
-    Component.onDestruction: visible = false
+    // 输入区域裁到宠物命中框：画布四周透明部分不再吞鼠标。
+    Loader {
+        id: maskLoader
+        source: "MaskBinder.qml"
+        onLoaded: {
+            item.targetWindow = win;
+            item.pet = pet;
+            item.topPad = win.bubbleReserve;
+        }
+        onStatusChanged: if (status === Loader.Error) {
+            console.warn("[deepseek-pet] input mask unavailable, transparent area will block clicks");
+        }
+    }
+
+    // 菜单是独立的 Layer Shell 窗口：鱼移动/换前台窗口后，右键菜单仍然在最上层。
+    LayerPetMenuWindow {
+        id: menuWindow
+        screen: win.screen
+        petSleeping: pet.sleeping
+        hasSleep: pet.hasSleep
+        onPlayRequested: function (name) { pet.playChosen(name); }
+        onWalkRequested: function (name) { pet.walkChosen(name); }
+        onIdleRequested: pet.playIdleOnce()
+        onTurnRequested: pet.playTurn()
+        onSleepRequested: pet.startSleep()
+        onWakeRequested: pet.wake()
+        onResetRequested: pet.resetPosition()
+        onChimeRequested: pet.hourlyChime()
+        onConfigureRequested: win.configureRequested()
+    }
+
+    function toggleMenu(px, py) {
+        if (menuWindow.visible) {
+            menuWindow.closeMenu();
+            return;
+        }
+        var mw = menuWindow.width;
+        var mh = menuWindow.height;
+        var sw = pet.workWidth > 0 ? pet.workWidth : pet.screenWidth;
+        var sh = Math.min(pet.workHeight > 0 ? pet.workHeight : pet.screenHeight,
+                          pet.screenHeight - pet.bottomInset);
+        var gx = pet.bodyX + px - mw / 2;
+        var gy = pet.bodyY + pet.petHeight + 8;
+        if (gy + mh > sh) {
+            gy = pet.bodyY - mh - 8;
+        }
+        gx = Math.max(0, Math.min(gx, Math.max(0, sw - mw)));
+        gy = Math.max(0, Math.min(gy, Math.max(0, sh - mh)));
+        menuWindow.openAt(gx, gy);
+    }
+
+    onPetVisibleChanged: if (!petVisible) menuWindow.closeMenu()
+
+    Component.onDestruction: {
+        visible = false;
+        menuWindow.closeMenu();
+    }
 }

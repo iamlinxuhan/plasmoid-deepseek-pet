@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import QtMultimedia
 import org.kde.kirigami as Kirigami
 import "AnimCatalog.js" as Catalog
@@ -38,10 +39,18 @@ Item {
     property bool layerMode: false
     property real screenWidth: 0
     property real screenHeight: 0
+    // 工作区（不含任务栏/面板）；Layer Shell 模式下用它做落地边界和菜单边界。
+    property real workWidth: 0
+    property real workHeight: 0
+    // 任务栏/浮动面板不一定反映在 availableGeometry 里；底部再留一段安全区。
+    property real bottomInset: 0
     // Layer Shell 窗口顶部为气泡预留的高度；鱼身不要走进这块透明区。
     property real topReserve: 0
 
     signal configureRequested()
+    // Layer Shell 模式：菜单由外层独立窗口承接。
+    signal menuRequested(real x, real y)
+    signal menuDismissRequested()
     // 供自动化测试/外部脚本检查菜单状态。
     property var contextMenu: menu
 
@@ -60,8 +69,8 @@ Item {
         return Math.max(96, limit);
     }
     readonly property real petHeight: petWidth * 9 / 16
-    readonly property real roamW: layerMode ? Math.max(1, screenWidth) : width
-    readonly property real roamH: layerMode ? Math.max(1, screenHeight) : height
+    readonly property real roamW: layerMode ? Math.max(1, workWidth > 0 ? workWidth : screenWidth) : width
+    readonly property real roamH: layerMode ? Math.max(1, Math.min(workHeight > 0 ? workHeight : screenHeight, screenHeight - bottomInset)) : height
     // 允许画框探出屏幕/组件边缘，让「身体框」而不是透明画布去贴边。
     readonly property real edgeAllow: sideAllow
     // 角色脚底在 640×360 画布上的 y=330；画框比脚底多出这一截，让它能贴住容器底边。
@@ -80,6 +89,7 @@ Item {
     property real bodyY: 0
     property bool initialized: false
 
+    property bool overBody: false
     property bool pressing: false
     property bool dragging: false
     property bool flying: false
@@ -209,6 +219,27 @@ Item {
             Behavior on opacity { NumberAnimation { duration: 140 } }
         }
 
+        // 命中用轮廓：MouseArea 仍是矩形，但真正按下/右键前会检查这个轮廓，
+        // 避免在透明画布边角、头发外侧误触发。
+        Shape {
+            id: silhouette
+            x: 0
+            y: 0
+            width: 640
+            height: 360
+            scale: pet.petWidth / 640
+            transformOrigin: Item.TopLeft
+            opacity: 0
+            containsMode: Shape.FillContains
+            ShapePath {
+                fillColor: "transparent"
+                strokeColor: "transparent"
+                PathSvg {
+                    path: "M 320 75 C 365 75 392 98 400 132 C 406 160 398 184 386 202 C 400 226 406 258 394 288 C 382 318 356 332 320 332 C 284 332 258 318 246 288 C 234 258 240 226 254 202 C 242 184 234 160 240 132 C 248 98 275 75 320 75 Z"
+                }
+            }
+        }
+
         MouseArea {
             id: hit
             x: pet.hitX
@@ -217,20 +248,27 @@ Item {
             height: pet.hitH
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            cursorShape: pet.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            cursorShape: pet.overBody
+                         ? (pet.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+                         : Qt.ArrowCursor
 
             onPressed: function (mouse) {
                 pet.beginPress(mouse);
             }
             onPositionChanged: function (mouse) {
+                pet.overBody = pet.overPetBody(mouse);
                 if (pet.pressing) {
                     pet.moveDrag(mouse);
                 }
             }
+            onExited: pet.overBody = false
             onReleased: function (mouse) {
                 pet.finishPress(mouse);
             }
             onClicked: function (mouse) {
+                if (!pet.overPetBody(mouse)) {
+                    return;
+                }
                 if (mouse.button === Qt.RightButton) {
                     pet.openMenuAt(mouse);
                 } else {
@@ -367,9 +405,6 @@ Item {
 
     PetMenu {
         id: menu
-        categories: Catalog.CATEGORIES
-        moves: moveNames()
-        clicks: Catalog.CLICKS
         petSleeping: pet.sleeping
         hasSleep: pet.hasSleep
 
@@ -758,9 +793,21 @@ Item {
     }
 
     // ---------- 拖拽与抛掷 ----------
+    function overPetBody(mouse) {
+        var pt = hit.mapToItem(silhouette, mouse.x, mouse.y);
+        return silhouette.contains(pt);
+    }
+
     function beginPress(mouse) {
         if (mouse.button !== Qt.LeftButton) {
             return;
+        }
+        if (!overPetBody(mouse)) {
+            return;
+        }
+        menuDismissRequested();
+        if (menu.visible) {
+            menu.close();
         }
         var now = Date.now();
         pressSling = (now - lastPressTime < 200);
@@ -1154,8 +1201,14 @@ Item {
     // ---------- 菜单 ----------
     function openMenuAt(mouse) {
         var pt = hit.mapToItem(pet, mouse.x, mouse.y);
-        menu.x = Math.max(0, Math.min(pt.x, Math.max(0, width - menu.width)));
-        menu.y = Math.max(0, Math.min(pt.y, Math.max(0, height - menu.height)));
+        if (layerMode) {
+            // 普通 Popup 在 Layer Shell 窗口里会掉到前台窗口下面；交给独立菜单窗口。
+            menuRequested(pt.x, pt.y);
+            return;
+        } else {
+            menu.x = Math.max(0, Math.min(pt.x, Math.max(0, width - menu.width)));
+            menu.y = Math.max(0, Math.min(pt.y, Math.max(0, height - menu.height)));
+        }
         menu.open();
     }
 }

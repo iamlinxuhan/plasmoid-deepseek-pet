@@ -7,3 +7,10 @@
 
 Gallery Pictures 要求每张 ≤ 5MB、最多 5 张；以上三张都在 400KB 以内。
 Product Logo 要求 20×20–2000×2000、≤ 2MB。
+
+## 宣传封面
+
+- B 站：`bilibili-cover.png`（1146×717）
+- 抖音：`douyin-cover.png`（1080×1920）
+- 六种构图：`covers/deepseek-pet-cover-16x9.png`、`-16x10`、`-4x3`、`-3x4`、`-9x16`、`-1x1`
+- 生成脚本：`promo/covers_pet.py`
