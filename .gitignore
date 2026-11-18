@@ -1,0 +1,6 @@
+reference/
+dist/
+build/
+*.plasmoid
+__pycache__/
+*.pyc

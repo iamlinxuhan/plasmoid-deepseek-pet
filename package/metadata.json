@@ -1,0 +1,31 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "2276677131@qq.com",
+                "Name": "iamlinxuhan"
+            },
+            {
+                "Name": "MerZlin",
+                "Task": "dsh-pet-indesktop (upgraded desktop runtime, move curves and metadata)"
+            },
+            {
+                "Name": "PC2005-cloud",
+                "Task": "Original dsh-pet and artwork"
+            }
+        ],
+        "Category": "Fun and Games",
+        "Description": "一只住在 KDE Plasma 桌面上的 DeepSeek 大肥鱼：待机呼吸、随机小动作、走动、点击回应、拖拽甩抛与睡觉。",
+        "Description[zh_CN]": "一只住在 KDE Plasma 桌面上的 DeepSeek 大肥鱼：待机呼吸、随机小动作、走动、点击回应、拖拽甩抛与睡觉。",
+        "EnabledByDefault": true,
+        "Icon": "applications-games",
+        "Id": "com.github.iamlinxuhan.deepseekpet",
+        "License": "MIT",
+        "Name": "DeepSeek 大肥鱼",
+        "Name[zh_CN]": "DeepSeek 大肥鱼",
+        "Version": "1.0.0",
+        "Website": "https://github.com/iamlinxuhan/plasmoid-deepseek-pet"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
