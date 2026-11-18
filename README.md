@@ -2,7 +2,7 @@
 
 一只住在 KDE Plasma 桌面上的 DeepSeek 大肥鱼。动画与行为参考独立桌面版 [MerZlin/dsh-pet-indesktop](https://github.com/MerZlin/dsh-pet-indesktop)（以及它上游的 [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet)）；本项目把其中**纯桌宠**的部分移植成 Plasma 6 plasmoid，不安装 `dsh`、不依赖 Python/Node/npm，也不需要任何模型 API。
 
-> 安装包：`dist/deepseek大肥鱼.plasmoid`
+> 安装包：`dist/deepseek大肥鱼.plasmoid`（GitHub Release 会把附件名规范成 `deepseek.plasmoid`，内容相同）
 
 ## 功能
 
