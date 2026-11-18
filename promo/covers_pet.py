@@ -56,10 +56,10 @@ def bg(p: QPainter, w: int, h: int) -> None:
     p.fillRect(0, 0, w, h, g)
     # 大块柔光
     for cx, cy, rr, c, a in [
-        (0.16, 0.18, 0.28, "#ffffff", 0.55),
-        (0.88, 0.20, 0.24, "#e0f2fe", 0.55),
-        (0.78, 0.86, 0.30, "#fce7f3", 0.55),
-        (0.12, 0.80, 0.22, "#ede9fe", 0.45),
+        (0.16, 0.18, 0.28, "#7dd3fc", 0.26),
+        (0.88, 0.20, 0.24, "#c4b5fd", 0.28),
+        (0.78, 0.86, 0.30, "#f9a8d4", 0.26),
+        (0.12, 0.80, 0.22, "#a7f3d0", 0.20),
     ]:
         rg = QRadialGradient(QPointF(w * cx, h * cy), max(w, h) * rr)
         rg.setColorAt(0.0, QColor(c))
@@ -313,7 +313,7 @@ def fish_card(p: QPainter, rect: QRectF, s: float, bubble_px: float) -> None:
 def title_card(p: QPainter, rect: QRectF, s: float, compact: bool = False) -> None:
     # 不铺大白卡：只在文字后面放一层柔光，让标题直接落在渐变背景上。
     F.glow(p, rect.x() + rect.width() * 0.46, rect.y() + rect.height() * 0.40,
-           max(rect.width(), rect.height()) * 0.92, "#ffffff", 0.52)
+           max(rect.width(), rect.height()) * 0.92, "#e0f2fe", 0.20)
     pad = rect.width() * 0.07
     left = rect.x() + pad
     y = rect.y() + pad * 0.7

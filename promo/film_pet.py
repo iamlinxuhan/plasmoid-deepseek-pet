@@ -53,19 +53,19 @@ NEW_SRC = os.path.join(ROOT, "reference", "dsh-pet-indesktop", "assets",
 OLD_SRC = os.path.join(ROOT, "reference", "dsh-pet-src", "dsh-pet", "assets", "webm")
 
 # ---------------- 配色 ----------------
-BG0 = "#060b14"
-BG1 = "#0b1524"
-BG2 = "#162236"
-INK = "#f1f5f9"
-MUTED = "#94a3b8"
+BG0 = "#9be7ff"
+BG1 = "#c9d4ff"
+BG2 = "#ffd9ec"
+INK = "#0b1b33"
+MUTED = "#465a78"
 DIM = "#64748b"
-LINE = "#1e3a5f"
-BLUE = "#38bdf8"
-BLUE_D = "#1d4ed8"
-PINK = "#f472b6"
-GREEN = "#86efac"
-YELLOW = "#fbbf24"
-PURPLE = "#c084fc"
+LINE = "#cbd5e1"
+BLUE = "#0284c7"
+BLUE_D = "#38bdf8"
+PINK = "#db2777"
+GREEN = "#059669"
+YELLOW = "#f59e0b"
+PURPLE = "#7c3aed"
 
 
 def col(hexstr: str, alpha: float = 1.0) -> QColor:
@@ -174,18 +174,17 @@ def background(p: QPainter, u: float, variant: int = 0) -> None:
     g.setColorAt(0.55, QColor(BG1))
     g.setColorAt(1.0, QColor(BG2))
     p.fillRect(0, 0, LW, LH, g)
-    glow(p, LW * 0.72, LH * 0.28, LW * 0.44, BLUE_D, 0.16)
-    glow(p, LW * 0.22, LH * 0.82, LW * 0.30, "#7c3aed", 0.08)
+    glow(p, LW * 0.72, LH * 0.28, LW * 0.46, "#bae6fd", 0.36)
+    glow(p, LW * 0.20, LH * 0.82, LW * 0.30, "#ddd6fe", 0.22)
     if variant:
-        glow(p, LW * 0.50, LH * 0.48, LW * 0.32, "#0ea5e9", 0.05)
-    # 极淡的网格
-    p.setPen(QPen(col(BLUE, 0.045), 1.0))
+        glow(p, LW * 0.50, LH * 0.48, LW * 0.32, "#a5f3fc", 0.14)
+    p.setPen(QPen(col(INK, 0.025), 1.0))
     step = 96
     for x in range(0, LW + 1, step):
         p.drawLine(x, 0, x, LH)
     for y in range(0, LH + 1, step):
         p.drawLine(0, y, LW, y)
-    # 缓慢漂移的散景
+    colors = ["#7dd3fc", "#c4b5fd", "#f9a8d4", "#a7f3d0"]
     for i, (fx, fy, rr, aa) in enumerate([
         (0.16, 0.24, 90, 0.06), (0.84, 0.72, 130, 0.05),
         (0.62, 0.12, 50, 0.08), (0.40, 0.90, 70, 0.04),
@@ -193,7 +192,7 @@ def background(p: QPainter, u: float, variant: int = 0) -> None:
         x = LW * fx + math.sin(u * 0.25 + i) * 18
         y = LH * fy + math.cos(u * 0.20 + i) * 14
         p.setPen(Qt.NoPen)
-        p.setBrush(col(BLUE, aa))
+        p.setBrush(col(colors[i % 4], aa * 1.7))
         p.drawEllipse(QPointF(x, y), rr, rr)
 
 
@@ -340,17 +339,17 @@ def bubble(p: QPainter, cx: float, bottom: float, msg: str, alpha: float,
         p.setPen(Qt.NoPen)
         p.setBrush(col("#000000", a))
         p.drawRoundedRect(rect.adjusted(-i, -i, i, i + 6), 18 + i, 18 + i)
-    p.setPen(QPen(col(INK, 0.18), 1.2))
-    p.setBrush(col("#f8fafc"))
+    p.setPen(QPen(col(YELLOW, 0.62), 1.4))
+    p.setBrush(col("#fff8dc"))
     p.drawRoundedRect(rect, 18, 18)
     tail = QPolygonF([QPointF(cx - 13, rect.bottom() - 2),
                       QPointF(cx + 13, rect.bottom() - 2),
                       QPointF(cx - 1, rect.bottom() + 16)])
     p.setPen(Qt.NoPen)
-    p.setBrush(col("#f8fafc"))
+    p.setBrush(col("#fff8dc"))
     p.drawPolygon(tail)
     p.setFont(f)
-    p.setPen(col("#0f172a"))
+    p.setPen(col(INK))
     p.drawText(QRectF(rect.x() + 26, rect.y() + 19, rect.width() - 52,
                       rect.height() - 38), int(Qt.TextWordWrap | Qt.AlignHCenter | Qt.AlignVCenter), msg)
     p.restore()
@@ -372,7 +371,7 @@ def badge(p: QPainter, x: float, y: float, label: str, alpha: float,
     p.setBrush(col(accent, 0.9))
     p.drawEllipse(QPointF(x + 20, y + 20), 4, 4)
     p.setFont(f)
-    p.setPen(col("#e0f2fe"))
+    p.setPen(col(INK))
     p.drawText(QRectF(x + 32, y, w - 44, 40), int(Qt.AlignLeft | Qt.AlignVCenter), label)
     p.restore()
 
@@ -385,7 +384,7 @@ def bullet(p: QPainter, x: float, y: float, label: str, alpha: float) -> None:
     p.setPen(Qt.NoPen)
     p.setBrush(col(BLUE, 0.9))
     p.drawEllipse(QPointF(x, y + 15), 5, 5)
-    text(p, label, QRectF(x + 22, y, 800, 38), 27, "#dbeafe")
+    text(p, label, QRectF(x + 22, y, 800, 38), 27, INK)
     p.restore()
 
 
@@ -393,51 +392,48 @@ def bullet(p: QPainter, x: float, y: float, label: str, alpha: float) -> None:
 
 
 TOP_LINES = [
-    [("import", PURPLE), (" QtQuick", "#93c5fd")],
-    [("import", PURPLE), (" org.kde.plasma.plasmoid", "#93c5fd")],
+    [("import", "#7c3aed"), (" QtQuick", "#2563eb")],
+    [("import", "#7c3aed"), (" org.kde.plasma.plasmoid", "#2563eb")],
     [],
-    [("PlasmoidItem", "#fbbf24"), (" {", INK)],
-    [("    Plasmoid.backgroundHints", "#fbbf24"), (": ", INK), ('"NoBackground"', GREEN)],
+    [("PlasmoidItem", "#7c3aed"), (" {", "#334155")],
+    [("    Plasmoid.backgroundHints", "#7c3aed"), (": ", "#334155"), ('"NoBackground"', "#059669")],
     [],
-    [("    fullRepresentation", "#fbbf24"), (": ", INK), ("Item", "#fbbf24"), (" {", INK)],
-    [("        ", INK), ("Pet", "#fbbf24"), (" {", INK)],
-    [("            petSize", "#fbbf24"), (": ", INK), ("420", "#fca5a5")],
-    [("            allowRoam", "#fbbf24"), (": ", INK), ("false", "#fca5a5")],
-    [("            walkSpeed", "#fbbf24"), (": ", INK), ("2.5", "#fca5a5")],
-    [("            ", INK), ("// 108 段动画，全部本地", DIM)],
-    [("        }", INK)],
-    [("    }", INK)],
-    [("}", INK)],
+    [("    fullRepresentation", "#7c3aed"), (": ", "#334155"), ("Item", "#7c3aed"), (" {", "#334155")],
+    [("        ", "#334155"), ("Pet", "#7c3aed"), (" {", "#334155")],
+    [("            petSize", "#7c3aed"), (": ", "#334155"), ("420", "#dc2626")],
+    [("            allowRoam", "#7c3aed"), (": ", "#334155"), ("false", "#dc2626")],
+    [("            walkSpeed", "#7c3aed"), (": ", "#334155"), ("2.5", "#dc2626")],
+    [("            ", "#334155"), ("// 108 段动画，全部本地", "#64748b")],
+    [("        }", "#334155")],
+    [("    }", "#334155")],
+    [("}", "#334155")],
 ]
 
-
 def desktop_window(p: QPainter, rect: QRectF, u: float, dim: float = 0.0) -> None:
-    rrect(p, rect, 16, "#0b1422", LINE, 1.2, 1.0, 0.8)
+    rrect(p, rect, 16, "#ffffff", LINE, 1.2, 1.0, 0.8)
     title = QRectF(rect.x(), rect.y(), rect.width(), 44)
     p.setPen(Qt.NoPen)
-    p.setBrush(col("#0f1b2d"))
+    p.setBrush(col("#e0f2fe"))
     p.drawRoundedRect(title, 16, 16)
     p.drawRect(QRectF(title.x(), title.bottom() - 16, title.width(), 16))
     for i, c in enumerate(["#fb7185", "#fbbf24", "#34d399"]):
         p.setBrush(col(c, 0.9))
         p.drawEllipse(QPointF(rect.x() + 24 + i * 22, rect.y() + 22), 6, 6)
     text(p, "main.qml — DeepSeek 大肥鱼", QRectF(rect.x() + 100, rect.y(), 700, 44),
-         18, MUTED)
-    # 侧栏
+         18, "#334155")
     side = QRectF(rect.x(), rect.y() + 44, 190, rect.height() - 44)
     p.setPen(Qt.NoPen)
-    p.setBrush(col("#0a1220", 0.9))
+    p.setBrush(col("#f8fafc"))
     p.drawRect(side)
     files = ["main.qml", "Pet.qml", "LayerPetWindow.qml", "AnimCatalog.js", "MoveData.js"]
     for i, name in enumerate(files):
         if i == 0:
-            p.setBrush(col(BLUE, 0.10))
+            p.setBrush(col(BLUE, 0.13))
             p.drawRoundedRect(QRectF(side.x() + 10, side.y() + 16 + i * 38,
                                      side.width() - 20, 32), 6, 6)
         text(p, name, QRectF(side.x() + 24, side.y() + 16 + i * 38,
                              side.width() - 32, 32), 15,
-             "#cbd5e1" if i == 0 else DIM)
-    # 代码
+             "#1e293b" if i == 0 else MUTED)
     x0 = side.right() + 28
     y0 = rect.y() + 72
     for i, line in enumerate(TOP_LINES):
@@ -447,36 +443,34 @@ def desktop_window(p: QPainter, rect: QRectF, u: float, dim: float = 0.0) -> Non
             p.setPen(col(c))
             p.drawText(QPointF(xx, y0 + i * 31), s)
             xx += QFontMetricsF(font(17, False, "mono")).horizontalAdvance(s)
-    # 光标
     if int(u * 2) % 2 == 0:
         p.setPen(QPen(col(BLUE, 0.8), 2))
         p.drawLine(QPointF(x0 + 300, y0 + 14 * 31 - 18),
                    QPointF(x0 + 300, y0 + 14 * 31 + 6))
-    # 状态栏
     p.setPen(Qt.NoPen)
-    p.setBrush(col("#0a1220"))
+    p.setBrush(col("#f1f5f9"))
     p.drawRect(QRectF(rect.x(), rect.bottom() - 26, rect.width(), 26))
     text(p, "QML · UTF-8 · 108 animations", QRectF(rect.x() + 20, rect.bottom() - 26,
-                                                   700, 26), 14, DIM)
+                                                   700, 26), 14, MUTED)
     if dim > 0:
         p.setPen(Qt.NoPen)
-        p.setBrush(col("#000000", dim))
+        p.setBrush(col("#ffffff", dim))
         p.drawRoundedRect(rect, 16, 16)
 
 
 def topbar(p: QPainter) -> None:
     p.setPen(Qt.NoPen)
-    p.setBrush(col("#050a12", 0.75))
+    p.setBrush(col("#ffffff", 0.82))
     p.drawRect(QRectF(0, 0, LW, 52))
-    p.setPen(QPen(col(INK, 0.08), 1))
+    p.setPen(QPen(col(INK, 0.10), 1))
     p.drawLine(0, 52, LW, 52)
     p.setPen(Qt.NoPen)
     p.setBrush(col(BLUE, 0.9))
     p.drawEllipse(QPointF(48, 26), 7, 7)
-    text(p, "DeepSeek 大肥鱼", QRectF(66, 0, 500, 52), 18, "#cbd5e1")
+    text(p, "DeepSeek 大肥鱼", QRectF(66, 0, 500, 52), 18, INK)
     text(p, "00:47", QRectF(LW - 200, 0, 100, 52), 18, MUTED,
          align=Qt.AlignRight | Qt.AlignVCenter)
-    for i, c in enumerate(["#38bdf8", "#f472b6", "#34d399"]):
+    for i, c in enumerate(["#0ea5e9", "#ec4899", "#10b981"]):
         p.setBrush(col(c, 0.8))
         p.drawEllipse(QPointF(LW - 80 + i * 22, 26), 5, 5)
 
@@ -498,7 +492,7 @@ def scene_intro(p: QPainter, u: float) -> None:
         p.setBrush(Qt.NoBrush)
         p.drawRoundedRect(QRectF(112, 170, 100, 100), 22, 22)
     text(p, "DeepSeek 大肥鱼", QRectF(110, 340, 1300, 150), 112, INK, True, alpha=a)
-    text(p, "KDE Plasma 6 桌面宠物", QRectF(116, 505, 1000, 60), 40, "#93c5fd", alpha=smooth((u - 0.3) / 0.8))
+    text(p, "KDE Plasma 6 桌面宠物", QRectF(116, 505, 1000, 60), 40, "#1d4ed8", alpha=smooth((u - 0.3) / 0.8))
     p.setPen(QPen(col(BLUE, 0.5), 2))
     p.drawLine(QPointF(118, 588), QPointF(118 + 760 * ease_out(u / 1.2), 588))
     text(p, "108 段透明动画 · Layer Shell 置顶 · 全本地运行",
@@ -553,7 +547,7 @@ def card(p: QPainter, rect: QRectF, index: int, label: str, name: str,
     p.save()
     p.setOpacity(alpha)
     glow(p, rect.center().x(), rect.center().y(), 260, BLUE_D, 0.13)
-    rrect(p, rect, 18, "#0d1727", LINE, 1.1, 1.0, 0.5)
+    rrect(p, rect, 18, "#ffffff", LINE, 1.1, 1.0, 0.5)
     text(p, "%02d" % (index + 1), QRectF(rect.x() + 24, rect.y() + 18, 80, 34),
          16, BLUE, True, alpha=0.8)
     prect = QRectF(rect.center().x() - 260, rect.y() + 48, 520, 292)
@@ -562,7 +556,7 @@ def card(p: QPainter, rect: QRectF, index: int, label: str, name: str,
     pet(p, prect, name, u, start=0)
     p.restore()
     text(p, label, QRectF(rect.x(), rect.bottom() - 64, rect.width(), 44),
-         24, "#e2e8f0", True, Qt.AlignHCenter | Qt.AlignVCenter)
+         24, INK, True, Qt.AlignHCenter | Qt.AlignVCenter)
     p.restore()
 
 
@@ -570,7 +564,7 @@ def scene_anims(p: QPainter, u: float) -> None:
     background(p, u + 13, 1)
     text(p, "108 段透明动画，随机不重样", QRectF(100, 96, 1500, 90), 62, INK, True)
     text(p, "待机 · 点击回应 · 玩耍 · 吃东西 · 节日 · 睡觉",
-         QRectF(104, 196, 1500, 46), 27, "#93c5fd")
+         QRectF(104, 196, 1500, 46), 27, "#1d4ed8")
     items = [
         ("待机", "待机呼吸休闲"),
         ("点击回应", "点击回应-元气挥手"),
@@ -619,7 +613,7 @@ def scene_throw(p: QPainter, u: float) -> None:
     win = QRectF(120, 230, 1180, 820)
     desktop_window(p, win, u, dim=0.35)
     text(p, "拖拽 · 甩抛 · 反弹", QRectF(120, 100, 1200, 70), 52, INK, True)
-    text(p, "有物理，也有手感", QRectF(124, 172, 900, 40), 24, "#93c5fd")
+    text(p, "有物理，也有手感", QRectF(124, 172, 900, 40), 24, "#1d4ed8")
     x, y, rot = throw_pos(u)
     prect = QRectF(x - 310, y - 175, 620, 349)
     # 轨迹
@@ -677,56 +671,52 @@ MENU_BTNS = ["待机", "转身", "回原位", "睡觉", "报时", "设置"]
 def menu_panel(p: QPainter, rect: QRectF, alpha: float) -> None:
     p.save()
     p.setOpacity(alpha)
-    rrect(p, rect, 16, "#151a22", "#2a3444", 1.2, 1.0, 0.7)
-    # 左栏
+    rrect(p, rect, 16, "#ffffff", LINE, 1.2, 1.0, 0.7)
     lx = rect.x() + 18
     ly = rect.y() + 22
     for i, name in enumerate(MENU_CATS):
         r = QRectF(lx, ly + i * 58, 196, 48)
         if i == 0:
             p.setPen(Qt.NoPen)
-            p.setBrush(col(BLUE_D, 0.30))
+            p.setBrush(col(BLUE, 0.14))
             p.drawRoundedRect(r, 8, 8)
         text(p, name, QRectF(lx + 16, r.y(), 180, 48), 22,
-             "#e2e8f0" if i == 0 else "#9aa8ba", i == 0)
-    p.setPen(QPen(col(INK, 0.14), 1))
+             INK if i == 0 else MUTED, i == 0)
+    p.setPen(QPen(col(INK, 0.12), 1))
     p.drawLine(QPointF(rect.x() + 238, rect.y() + 18),
                QPointF(rect.x() + 238, rect.bottom() - 90))
-    # 右栏
     ax = rect.x() + 262
     ay = rect.y() + 22
     for i, name in enumerate(MENU_ACTS):
         r = QRectF(ax, ay + i * 46, rect.width() - 300, 40)
         if i == 8:
             p.setPen(Qt.NoPen)
-            p.setBrush(col("#1e3a5f", 0.9))
+            p.setBrush(col("#dbeafe"))
             p.drawRoundedRect(r, 7, 7)
         text(p, name, QRectF(ax + 14, r.y(), r.width() - 20, 40), 21,
-             "#f1f5f9" if i == 8 else "#c3cedd", i == 8)
-    # 滚动条
+             INK if i == 8 else "#334155", i == 8)
     p.setPen(Qt.NoPen)
-    p.setBrush(col(INK, 0.14))
+    p.setBrush(col(INK, 0.12))
     p.drawRoundedRect(QRectF(rect.right() - 18, rect.y() + 24, 5, rect.height() - 160), 2.5, 2.5)
-    p.setBrush(col(INK, 0.38))
+    p.setBrush(col(INK, 0.32))
     p.drawRoundedRect(QRectF(rect.right() - 18, rect.y() + 120, 5, 120), 2.5, 2.5)
-    # 底栏
     by = rect.bottom() - 78
-    p.setPen(QPen(col(INK, 0.14), 1))
+    p.setPen(QPen(col(INK, 0.12), 1))
     p.drawLine(QPointF(rect.x() + 14, by), QPointF(rect.right() - 14, by))
     bw = (rect.width() - 36) / len(MENU_BTNS)
     for i, name in enumerate(MENU_BTNS):
         r = QRectF(rect.x() + 18 + i * bw, by + 12, bw - 8, 50)
-        p.setPen(QPen(col(INK, 0.22), 1))
-        p.setBrush(col(INK, 0.04))
+        p.setPen(QPen(col(INK, 0.18), 1))
+        p.setBrush(col("#f8fafc"))
         p.drawRoundedRect(r, 8, 8)
-        text(p, name, r, 20, "#dbe4f0", align=Qt.AlignCenter)
+        text(p, name, r, 20, INK, align=Qt.AlignCenter)
     p.restore()
 
 
 def scene_menu(p: QPainter, u: float) -> None:
     background(p, u + 33)
     text(p, "右键，换一个动作", QRectF(100, 110, 1200, 90), 62, INK, True)
-    text(p, "全部动画都在本地播放", QRectF(104, 208, 900, 42), 26, "#93c5fd")
+    text(p, "全部动画都在本地播放", QRectF(104, 208, 900, 42), 26, "#1d4ed8")
     a = smooth((u - 0.2) / 0.6)
     panel = QRectF(1080 - 50 * (1 - a), 230, 820, 860)
     menu_panel(p, panel, a)
@@ -748,19 +738,19 @@ def scene_outro(p: QPainter, u: float) -> None:
     background(p, u + 41, 1)
     text(p, "把大肥鱼带回家", QRectF(100, 120, 1500, 100), 76, INK, True)
     text(p, "KDE Plasma 6 · Wayland Layer Shell · MIT",
-         QRectF(104, 228, 1200, 46), 28, "#93c5fd")
+         QRectF(104, 228, 1200, 46), 28, "#1d4ed8")
     # 终端卡片
     card = QRectF(100, 340, 1120, 226)
-    rrect(p, card, 14, "#0a1220", LINE, 1.2, 1.0, 0.6)
+    rrect(p, card, 14, "#ffffff", LINE, 1.2, 1.0, 0.6)
     p.setPen(Qt.NoPen)
-    p.setBrush(col("#0f1b2d"))
+    p.setBrush(col("#e0f2fe"))
     p.drawRoundedRect(QRectF(card.x(), card.y(), card.width(), 34), 14, 14)
     p.drawRect(QRectF(card.x(), card.y() + 18, card.width(), 16))
     text(p, "konsole", QRectF(card.x() + 18, card.y(), 300, 34), 14, MUTED)
     text(p, "$", QRectF(card.x() + 26, card.y() + 52, 30, 40), 24, GREEN, role="mono")
     text(p, "kpackagetool6 -t Plasma/Applet -i deepseek大肥鱼.plasmoid",
          QRectF(card.x() + 56, card.y() + 52, card.width() - 80, 40), 23,
-         "#e2e8f0", role="mono")
+         INK, role="mono")
     text(p, "# 或：右键桌面 → 添加组件 → 从文件安装组件",
          QRectF(card.x() + 26, card.y() + 112, card.width() - 50, 38), 18, DIM,
          role="mono")
@@ -819,13 +809,8 @@ def render_frame(img: QImage, t: float) -> None:
         p = QPainter(img)
         p.drawImage(0, 0, _BA)
         p.end()
-    # 暗角 + 淡入淡出 + 进度
+    # 淡入淡出 + 进度（浅色片不压暗角）
     p = QPainter(img)
-    g = QRadialGradient(QPointF(img.width() / 2, img.height() / 2),
-                        max(img.width(), img.height()) * 0.70)
-    g.setColorAt(0.55, QColor(0, 0, 0, 0))
-    g.setColorAt(1.0, QColor(0, 0, 0, 58))
-    p.fillRect(0, 0, img.width(), img.height(), g)
     fade = 1.0
     if t < 0.9:
         fade = t / 0.9
@@ -833,7 +818,7 @@ def render_frame(img: QImage, t: float) -> None:
         fade = (T.DUR - t) / 1.1
     if fade < 1.0:
         p.fillRect(0, 0, img.width(), img.height(),
-                   QColor(0, 0, 0, int(255 * (1 - smooth(fade)))))
+                   QColor(255, 255, 255, int(255 * (1 - smooth(fade)))))
     p.setPen(Qt.NoPen)
     p.setBrush(col(BLUE, 0.55))
     p.drawRect(QRectF(0, img.height() - 6, img.width() * clamp(t / T.DUR), 6))
