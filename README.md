@@ -6,9 +6,13 @@
 
 ## 功能
 
+- **真正的置顶悬浮窗**：Wayland 下使用 Layer Shell，鱼始终浮在所有普通窗口之上；窗口只有鱼身大小，不会遮挡全屏点击。X11 或 Layer Shell 不可用时自动降级为桌面小组件。
 - **108 段透明动画**：待机呼吸、伸展、打哈欠、玩魔方、吃东西、节日动作、工作状态姿态……全部按权重首尾衔接，随机播放。
 - **随机链**：待机 / 转向 / 自主走动 / 随机小动作，四类按权重抽取；转向动画播完后才会翻转朝向。
-- **不走滑的走路**：采用升级源的逐帧位移曲线（`move_strides.json`），位移只跟解码帧号走；先按两侧剩余空间选方向，距离量化成整圈步态，静帧段原地不动。
+- **不走滑的走路**（默认关闭）：采用升级源的逐帧位移曲线（`move_strides.json`），位移只跟解码帧号走；只做横向移动，距离量化成整圈步态，静帧段原地不动。觉得乱动烦人可以在设置里保持关闭，或只手动右键「走动」。
+- **整点报时**：每到整点，鱼头顶弹一个小气泡「主人，已经 X 点了～」。
+- **系统占用反应**：每 5 秒读取 `/proc/stat` 与 `/proc/meminfo`；CPU 高时切「忙碌点按 / 垂头叹气冒汗」，内存快满时弹「要撑死啦……」并蹲下。只读本机文件，不联网。
+- **无规则散步（可选）**：默认关闭；打开后每 2–5 分钟横向走一段，没空间时伸个懒腰。
 - **文字动画不镜像**：`text_clips.json` 里 6 段带可读文字的动画，在面向右时跳过随机抽取；右键点播时会先翻回正面。
 - **点击回应**：点一下随机播一段回应动画，带 Q 弹挤压与点击音效。
 - **拖拽甩抛**：拖起来跟着指针走，松手按手速甩出去；撞到容器边缘会反弹、摩擦、落地压扁回弹。
@@ -62,6 +66,7 @@ kpackagetool6 -t Plasma/Applet -r com.github.iamlinxuhan.deepseekpet
 | 操作 | 效果 |
 | --- | --- |
 | 左键点一下 | 点击回应 + Q 弹 + 音效 |
+| 点击桌面上的小锚点 | 显示/隐藏悬浮窗里的鱼 |
 | 按住拖动 | 抓起并跟随指针 |
 | 拖动后松手 | 按手速甩抛；慢慢放下则原地站好 |
 | 快速二次按下并拖远 | 弹弓发射 |
@@ -77,8 +82,12 @@ kpackagetool6 -t Plasma/Applet -r com.github.iamlinxuhan.deepseekpet
 
 - **宠物大小**：160–720 px（画框宽度，角色本体约 37.5%）
 - **活跃程度**：安静 / 正常 / 活泼
-- **允许自主走动**：关闭后只在原地待机与随机动作
+- **允许自主走动**：默认关闭；打开后随机链会抽横向走位
+- **每隔几分钟自己散个步**：默认关闭；打开后 2–5 分钟一次横向散步
+- **整点报时**
+- **CPU / 内存占用高时做出反应**
 - **点击音效**
+- **走路速度**：1.0×–4.0×，默认 2.5×
 - **抛掷力度**：0.5–2.0
 - **重力**：0 = 无重力（会一直飘），默认 1400
 - **初始角落**：左上 / 右上 / 左下 / 右下
@@ -88,6 +97,7 @@ kpackagetool6 -t Plasma/Applet -r com.github.iamlinxuhan.deepseekpet
 - KDE Plasma 6.0+（开发环境：Plasma 6.3.6 / Qt 6.8 / Debian 13）
 - 需要 Qt 的 WebP 图片插件（`libqwebp.so`，Debian/Ubuntu 的 `qt6-image-formats-plugins` 或发行版等价包；Plasma 桌面通常已自带）
 - 动画格式为 384×216 带 Alpha 的动画 WebP，由 Qt `AnimatedImage` 解码；不依赖 QtMultimedia 视频透明，因此 Wayland / X11 表现一致
+- **置顶悬浮窗需要 Wayland + `layer-shell-qt` 运行时**（Plasma 桌面通常已预装 `liblayershellqtinterface6`）。包内已附带 x86_64 的 `org.kde.layershell` QML 插件；其它架构或插件加载失败时，会自动降级为普通桌面小组件（不再置顶）
 
 ## 从源码构建
 
@@ -131,6 +141,8 @@ package/
     ui/Pet.qml                  桌宠状态机、物理与交互
     ui/PetMenu.qml              右键菜单
     ui/configGeneral.qml        设置页
+    ui/layershell/              随包附带的 Layer Shell QML 插件（x86_64）
+    ui/LayerPetWindow.qml       Layer Shell 置顶悬浮窗
     ui/AnimCatalog.js           动画池 / 权重 / 不镜像清单 / 松手初速
     ui/AnimData.js              动画帧数与时长（自动生成）
     ui/MoveData.js              逐帧步态位移曲线（自动生成）
@@ -148,4 +160,6 @@ tools/                          转码、构建、安装脚本
 
 ## 许可证
 
-MIT，见 [LICENSE](LICENSE)。
+本项目代码与动画移植部分为 MIT，见 [LICENSE](LICENSE)。随包附带的
+`contents/ui/layershell/` 来自 KDE layer-shell-qt，按 LGPL-3 许可分发；详见
+[THIRD_PARTY_NOTICES.md](package/THIRD_PARTY_NOTICES.md) 与 `package/LICENSES/`。

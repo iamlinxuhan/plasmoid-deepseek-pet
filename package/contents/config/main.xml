@@ -13,7 +13,7 @@
             <default>1</default>
         </entry>
         <entry name="allowRoam" type="Bool">
-            <default>true</default>
+            <default>false</default>
         </entry>
         <entry name="clickSound" type="Bool">
             <default>true</default>
@@ -24,8 +24,20 @@
         <entry name="gravity" type="Int">
             <default>1400</default>
         </entry>
+        <entry name="walkSpeed" type="Double">
+            <default>2.5</default>
+        </entry>
         <entry name="startCorner" type="Int">
             <default>3</default>
+        </entry>
+        <entry name="chimeEnabled" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="strollEnabled" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="monitorEnabled" type="Bool">
+            <default>true</default>
         </entry>
     </group>
 </kcfg>

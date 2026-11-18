@@ -11,7 +11,11 @@ KCM.SimpleKCM {
     property alias cfg_clickSound: soundCheck.checked
     property alias cfg_throwPower: powerSlider.value
     property alias cfg_gravity: gravitySpin.value
+    property alias cfg_walkSpeed: walkSpeedSlider.value
     property alias cfg_startCorner: cornerCombo.currentIndex
+    property alias cfg_chimeEnabled: chimeCheck.checked
+    property alias cfg_strollEnabled: strollCheck.checked
+    property alias cfg_monitorEnabled: monitorCheck.checked
 
     Kirigami.FormLayout {
         QQC2.SpinBox {
@@ -52,6 +56,14 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: "抛掷力度：" + value.toFixed(1)
         }
 
+        QQC2.Slider {
+            id: walkSpeedSlider
+            from: 1.0
+            to: 4.0
+            stepSize: 0.1
+            Kirigami.FormData.label: "走路速度：" + value.toFixed(1) + "×"
+        }
+
         QQC2.SpinBox {
             id: gravitySpin
             from: 0
@@ -63,6 +75,34 @@ KCM.SimpleKCM {
 
         QQC2.Label {
             text: "0 = 无重力，宠物被甩出后会一直飘；默认 1400。"
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+            wrapMode: Text.Wrap
+        }
+
+        QQC2.Label {
+            text: "本地小功能"
+            Kirigami.FormData.isSection: true
+        }
+
+        QQC2.CheckBox {
+            id: chimeCheck
+            text: "整点报时（气泡说「主人，已经 X 点了」）"
+        }
+
+        QQC2.CheckBox {
+            id: strollCheck
+            text: "每隔几分钟自己散个步，偶尔伸懒腰"
+        }
+
+        QQC2.CheckBox {
+            id: monitorCheck
+            text: "CPU / 内存占用高时做出反应"
+        }
+
+        QQC2.Label {
+            text: "每 5 秒读取一次 /proc/stat 与 /proc/meminfo，只在本机计算，不联网。"
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.maximumWidth: Kirigami.Units.gridUnit * 18

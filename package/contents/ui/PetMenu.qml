@@ -41,6 +41,7 @@ QQC2.Popup {
     signal sleepRequested()
     signal wakeRequested()
     signal resetRequested()
+    signal chimeRequested()
     signal configureRequested()
 
     width: Kirigami.Units.gridUnit * 28
@@ -152,6 +153,10 @@ QQC2.Popup {
                     }
                     menu.close();
                 }
+            }
+            MenuButton {
+                text: "报时"
+                onClicked: { menu.chimeRequested(); menu.close(); }
             }
             MenuButton {
                 text: "设置"

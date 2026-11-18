@@ -1,5 +1,6 @@
 import QtQuick
 import QtMultimedia
+import org.kde.kirigami as Kirigami
 import "AnimCatalog.js" as Catalog
 import "AnimData.js" as AnimData
 import "MoveData.js" as MoveData
@@ -23,12 +24,32 @@ Item {
     property int startCorner: 3            // 0 左上 / 1 右上 / 2 左下 / 3 右下
     property string petName: "DeepSeek 大肥鱼"
 
+    // 本地小功能（不联网）
+    property bool chimeEnabled: true
+    property bool strollEnabled: true
+    property bool monitorEnabled: true
+    property real cpuUsage: 0
+    property real memUsage: 0
+    // 移动动画的播放倍率；走路时窗口位移也按同一帧进度推进，所以倍率同时放大速度与步频。
+    property real walkSpeed: 2.5
+
+    // Layer Shell 模式：Pet 自己是独立悬浮窗的内容，bodyX/bodyY 是窗口在屏幕上的位置；
+    // 普通模式：Pet 住在桌面小组件里，bodyX/bodyY 是组件内位置。
+    property bool layerMode: false
+    property real screenWidth: 0
+    property real screenHeight: 0
+    // Layer Shell 窗口顶部为气泡预留的高度；鱼身不要走进这块透明区。
+    property real topReserve: 0
+
     signal configureRequested()
     // 供自动化测试/外部脚本检查菜单状态。
     property var contextMenu: menu
 
     // ---------- 尺寸与几何 ----------
     readonly property real petWidth: {
+        if (layerMode) {
+            return Math.max(96, petSize);
+        }
         var limit = petSize;
         if (width > 0) {
             limit = Math.min(limit, width);
@@ -39,6 +60,10 @@ Item {
         return Math.max(96, limit);
     }
     readonly property real petHeight: petWidth * 9 / 16
+    readonly property real roamW: layerMode ? Math.max(1, screenWidth) : width
+    readonly property real roamH: layerMode ? Math.max(1, screenHeight) : height
+    // 允许画框探出屏幕/组件边缘，让「身体框」而不是透明画布去贴边。
+    readonly property real edgeAllow: sideAllow
     // 角色脚底在 640×360 画布上的 y=330；画框比脚底多出这一截，让它能贴住容器底边。
     readonly property real feetPad: petHeight / 12
     // 命中框来自升级源 manifest.json 的 body_box [212, 60, 428, 330]（640×360 画布）。
@@ -97,6 +122,12 @@ Item {
     property string sleepPhase: ""
     property var currentSleepSet: null
 
+    // ---------- 气泡与小功能 ----------
+    property string bubbleText: ""
+    property bool bubbleVisible: false
+    property double lastCpuAlert: 0
+    property double lastMemAlert: 0
+
     // ---------- 挤压 ----------
     property real squashScale: 1
     property real squashDepth: 0.55
@@ -117,17 +148,29 @@ Item {
         initialized = true;
         resetPosition();
         playIdleOnce();
+        if (chimeEnabled) {
+            scheduleHourly();
+        }
+        if (strollEnabled) {
+            scheduleStroll();
+        }
     }
 
     onWidthChanged: if (initialized) clampPlacement()
     onHeightChanged: if (initialized) clampPlacement()
     onPetWidthChanged: if (initialized) clampPlacement()
+    onScreenWidthChanged: if (initialized) clampPlacement()
+    onScreenHeightChanged: if (initialized) clampPlacement()
+    onChimeEnabledChanged: if (chimeEnabled) scheduleHourly(); else hourlyTimer.stop()
+    onStrollEnabledChanged: if (strollEnabled) scheduleStroll(); else strollTimer.stop()
+    onCpuUsageChanged: if (monitorEnabled && cpuUsage >= 75) maybeCpuAlert()
+    onMemUsageChanged: if (monitorEnabled && memUsage >= 85) maybeMemAlert()
 
     // ---------- 画面 ----------
     Item {
         id: spriteHolder
-        x: pet.bodyX
-        y: pet.bodyY
+        x: pet.layerMode ? 0 : pet.bodyX
+        y: pet.layerMode ? 0 : pet.bodyY
         width: pet.petWidth
         height: pet.petHeight
 
@@ -197,6 +240,61 @@ Item {
         }
     }
 
+    // ---------- 气泡 ----------
+    Item {
+        id: bubbleRoot
+        visible: pet.bubbleVisible && pet.bubbleText !== ""
+        width: Math.min(pet.petWidth * 0.92, Math.max(140, bubbleMetrics.width + 28))
+        height: bubbleLabel.implicitHeight + 20
+        x: (pet.petWidth - width) / 2
+        y: -height - 10
+        z: 20
+        opacity: visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 160 } }
+
+        TextMetrics {
+            id: bubbleMetrics
+            font.pixelSize: bubbleFontSize()
+            text: pet.bubbleText
+        }
+
+        Rectangle {
+            id: bubbleTail
+            width: 14
+            height: 14
+            rotation: 45
+            color: bubbleBody.color
+            border.width: 1
+            border.color: bubbleBody.border.color
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: bubbleBody.bottom
+            anchors.topMargin: -7
+            z: -1
+        }
+
+        Rectangle {
+            id: bubbleBody
+            anchors.fill: parent
+            radius: 10
+            color: Kirigami.Theme.backgroundColor
+            border.width: 1
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.22)
+        }
+
+        Text {
+            id: bubbleLabel
+            anchors.fill: bubbleBody
+            anchors.margins: 9
+            text: pet.bubbleText
+            color: Kirigami.Theme.textColor
+            font.family: Kirigami.Theme.defaultFont.family
+            font.pixelSize: bubbleFontSize()
+            wrapMode: Text.Wrap
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
     // ---------- 计时器 ----------
     Timer {
         id: tick
@@ -217,6 +315,29 @@ Item {
                 pet.handleEnded();
             }
         }
+    }
+
+    Timer {
+        id: bubbleTimer
+        repeat: false
+        onTriggered: pet.bubbleVisible = false
+    }
+
+    Timer {
+        id: hourlyTimer
+        repeat: false
+        running: pet.chimeEnabled
+        onTriggered: {
+            pet.hourlyChime();
+            pet.scheduleHourly();
+        }
+    }
+
+    Timer {
+        id: strollTimer
+        repeat: true
+        running: pet.strollEnabled
+        onTriggered: pet.randomStroll()
     }
 
     SequentialAnimation {
@@ -258,6 +379,7 @@ Item {
         onTurnRequested: pet.playTurn()
         onSleepRequested: pet.startSleep()
         onWakeRequested: pet.wake()
+        onChimeRequested: pet.hourlyChime()
         onResetRequested: pet.resetPosition()
         onConfigureRequested: pet.configureRequested()
     }
@@ -285,6 +407,14 @@ Item {
         endHandled = false;
         loadingAnim = true;
         endFallback.stop();
+        var isMove = false;
+        for (var m = 0; m < Catalog.MOVES.actions.length; m++) {
+            if (Catalog.MOVES.actions[m].name === name) {
+                isMove = true;
+                break;
+            }
+        }
+        target.speed = (isMove && walking) ? Math.max(0.5, walkSpeed) : 1.0;
         target.playing = false;
         target.opacity = 0;
         target.source = "";
@@ -395,6 +525,14 @@ Item {
         pickNext();
     }
 
+    function globalPoint(mouse) {
+        var p = hit.mapToItem(pet, mouse.x, mouse.y);
+        if (layerMode) {
+            return { x: bodyX + p.x, y: bodyY + p.y };
+        }
+        return p;
+    }
+
     function playIdleOnce() {
         if (Catalog.IDLE.length === 0) {
             return;
@@ -443,11 +581,11 @@ Item {
 
     // ---------- 随机链 ----------
     function currentWeights() {
-        var w = { idle: 30, turn: 10, move: 20 };
+        var w = { idle: 25, turn: 10, move: 25 };
         if (activityLevel === 0) {
-            w = { idle: 55, turn: 5, move: 5 };
+            w = { idle: 55, turn: 5, move: 10 };
         } else if (activityLevel === 2) {
-            w = { idle: 10, turn: 10, move: 30 };
+            w = { idle: 5, turn: 10, move: 35 };
         }
         if (!allowRoam) {
             w.move = 0;
@@ -460,8 +598,8 @@ Item {
         var halfW = petWidth / 2;
         var margin = Catalog.MOVES.default.margin;
         var center = bodyX + halfW;
-        var leftBound = margin + halfW - sideAllow;
-        var rightBound = width - margin - halfW + sideAllow;
+        var leftBound = margin + halfW - edgeAllow;
+        var rightBound = roamW - margin - halfW + edgeAllow;
         var mid = (leftBound + rightBound) / 2;
         var band = Math.max(1, (rightBound - leftBound) * 0.07);
         if (center < mid - band) {
@@ -538,12 +676,13 @@ Item {
         var halfW = petWidth / 2;
         var margin = Catalog.MOVES.default.margin;
         var centerX = bodyX + halfW;
-        var leftBound = margin + halfW - sideAllow;
-        var rightBound = width - margin - halfW + sideAllow;
+        var leftBound = margin + halfW - edgeAllow;
+        var rightBound = roamW - margin - halfW + edgeAllow;
         var roomLeft = centerX - leftBound;
         var roomRight = rightBound - centerX;
-        var minDistance = 60;
-        var maxDistance = 240;
+        // 比升级源更远的随机步幅：桌宠要让人一眼看出它在挪窝。
+        var minDistance = 120;
+        var maxDistance = 480;
         var dir;
         if (roomLeft >= minDistance && roomRight >= minDistance) {
             dir = Math.random() < 0.5 ? -1 : 1;
@@ -577,12 +716,8 @@ Item {
             loops: loops,
             targetX: targetX
         };
-        if (face !== facing && Catalog.TURN.length > 0) {
-            // 先播转向，翻完朝向再由 handleEnded 启动这段走位。
-            pendingWalk = plan;
-            playAnim(Catalog.pick(Catalog.TURN, currentAnim), true);
-            return true;
-        }
+        // 不先播 10 秒转向片：翻面立即生效，走位马上开始。
+        // 素材本身是朝左的，向右走时由镜像完成“转身”；这样随机移动一眼就能看见。
         facing = face;
         startWalkPlan(plan);
         return true;
@@ -632,7 +767,7 @@ Item {
         lastPressTime = now;
         pressing = true;
         dragging = false;
-        var pt = hit.mapToItem(pet, mouse.x, mouse.y);
+        var pt = globalPoint(mouse);
         pressX = pt.x;
         pressY = pt.y;
         grabOffX = pt.x - (bodyX + petWidth / 2);
@@ -659,7 +794,7 @@ Item {
         if (!pressing) {
             return;
         }
-        var pt = hit.mapToItem(pet, mouse.x, mouse.y);
+        var pt = globalPoint(mouse);
         var dx = pt.x - pressX;
         var dy = pt.y - pressY;
         if (!dragging && Math.sqrt(dx * dx + dy * dy) >= 6) {
@@ -753,9 +888,11 @@ Item {
     function stepFlight(dt) {
         var steps = Math.min(64, Math.max(1, Math.ceil(Math.max(Math.abs(flightVX), Math.abs(flightVY)) * dt / 8)));
         var sdt = dt / steps;
+        // 负 margin 在 Layer Shell 里允许：画框可以探出屏幕，身体边缘才真正碰到屏幕边缘。
         var minX = -sideAllow;
-        var maxX = width - petWidth + sideAllow;
-        var maxY = height - petHeight + feetPad;
+        var maxX = roamW - petWidth + sideAllow;
+        var minY = layerMode ? topReserve : 0;
+        var maxY = Math.max(minY, roamH - petHeight + feetPad);
         var friction = Math.max(0, 1 - 2.5 * sdt);
 
         for (var i = 0; i < steps; i++) {
@@ -773,8 +910,8 @@ Item {
                 flightVY *= friction;
             }
 
-            if (bodyY < 0 && bodyY > -10000) {
-                bodyY = 0;
+            if (bodyY < minY && bodyY > -10000) {
+                bodyY = minY;
                 flightVY = Math.abs(flightVY) > 40 ? -flightVY * 0.78 : 0;
                 flightVX *= friction;
             }
@@ -832,6 +969,14 @@ Item {
 
     // ---------- 位置 ----------
     function clampPlacement() {
+        if (layerMode) {
+            var screenMinX = -sideAllow;
+            var screenMaxX = Math.max(screenMinX, roamW - petWidth + sideAllow);
+            var screenMaxY = Math.max(topReserve, roamH - petHeight + feetPad);
+            bodyX = Math.max(screenMinX, Math.min(bodyX, screenMaxX));
+            bodyY = Math.max(topReserve, Math.min(bodyY, screenMaxY));
+            return;
+        }
         var minX = -sideAllow;
         var maxX = Math.max(minX, width - petWidth + sideAllow);
         var maxY = Math.max(0, height - petHeight + feetPad);
@@ -846,18 +991,19 @@ Item {
         dragging = false;
         pressing = false;
         var margin = 24;
-        var maxY = Math.max(0, height - petHeight + feetPad);
+        var top = layerMode ? topReserve : 0;
+        var maxY = Math.max(top, roamH - petHeight + feetPad);
         if (startCorner === 0) {
             bodyX = margin;
-            bodyY = margin;
+            bodyY = top + margin;
         } else if (startCorner === 1) {
-            bodyX = width - petWidth - margin;
-            bodyY = margin;
+            bodyX = roamW - petWidth - margin;
+            bodyY = top + margin;
         } else if (startCorner === 2) {
             bodyX = margin;
             bodyY = maxY - margin;
         } else {
-            bodyX = width - petWidth - margin;
+            bodyX = roamW - petWidth - margin;
             bodyY = maxY - margin;
         }
         clampPlacement();
@@ -876,6 +1022,96 @@ Item {
         pendingAfterFlight = false;
     }
 
+    // ---------- 气泡 / 报时 / 散步 / 占用监控 ----------
+    function bubbleFontSize() {
+        return Math.max(12, Math.round(pet.petWidth * 0.038));
+    }
+
+    function say(text, duration) {
+        if (!text) {
+            return;
+        }
+        bubbleText = text;
+        bubbleVisible = true;
+        bubbleTimer.interval = duration && duration > 0 ? duration : 6000;
+        bubbleTimer.restart();
+    }
+
+    function scheduleHourly() {
+        if (!chimeEnabled) {
+            return;
+        }
+        var now = new Date();
+        var next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0, 0);
+        hourlyTimer.interval = Math.max(1000, next.getTime() - now.getTime());
+        hourlyTimer.restart();
+    }
+
+    function hourlyChime() {
+        if (sleeping) {
+            return;
+        }
+        var now = new Date();
+        var h = now.getHours();
+        var period = h < 6 ? "凌晨" : (h < 9 ? "早上" : (h < 12 ? "上午" : (h < 14 ? "中午" : (h < 18 ? "下午" : "晚上"))));
+        var h12 = h % 12;
+        if (h12 === 0) {
+            h12 = 12;
+        }
+        say("主人，已经" + period + " " + h12 + " 点了～", 7000);
+    }
+
+    function scheduleStroll() {
+        if (!strollEnabled) {
+            return;
+        }
+        // 2–5 分钟一次，避免和随机链的节奏完全重合。
+        strollTimer.interval = 120000 + Math.floor(Math.random() * 180000);
+        strollTimer.restart();
+    }
+
+    function randomStroll() {
+        if (sleeping || dragging || flying || pressing) {
+            scheduleStroll();
+            return;
+        }
+        if (!tryWalk()) {
+            if (Math.random() < 0.5) {
+                playAnim("超大伸懒腰", true);
+            }
+        }
+        scheduleStroll();
+    }
+
+    function maybeCpuAlert() {
+        if (!monitorEnabled || sleeping || dragging || flying || walking || pressing) {
+            return;
+        }
+        var now = Date.now();
+        if (now - lastCpuAlert < 60000) {
+            return;
+        }
+        lastCpuAlert = now;
+        stopMotion();
+        playAnim(cpuUsage >= 90 ? "工作状态-垂头叹气冒汗" : "工作状态-忙碌点按", true);
+    }
+
+    function maybeMemAlert() {
+        if (!monitorEnabled || sleeping || dragging || flying) {
+            return;
+        }
+        var now = Date.now();
+        if (now - lastMemAlert < 300000) {
+            return;
+        }
+        lastMemAlert = now;
+        say("要撑死啦……内存快满了！", 8000);
+        if (!walking && !pressing) {
+            stopMotion();
+            playAnim("原地重力下蹲压缩", true);
+        }
+    }
+
     // ---------- 睡觉 ----------
     function startSleep() {
         if (!hasSleep || sleeping) {
@@ -889,6 +1125,7 @@ Item {
         stopMotion();
         pressing = false;
         dragging = false;
+        bubbleVisible = false;
         sleeping = true;
         sleepPhase = "start";
         playAnim(Catalog.pick(set.start), true);

@@ -24,7 +24,7 @@
         "License": "MIT",
         "Name": "DeepSeek 大肥鱼",
         "Name[zh_CN]": "DeepSeek 大肥鱼",
-        "Version": "1.0.0",
+        "Version": "1.1.0",
         "Website": "https://github.com/iamlinxuhan/plasmoid-deepseek-pet"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
