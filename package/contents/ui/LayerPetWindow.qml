@@ -26,6 +26,9 @@ QW.Window {
     // 同时把窗口整体上移，保证鱼身在屏幕上的位置仍然是 bodyY。
     readonly property real bubbleReserve: 96
     readonly property real petWidthForPet: Math.max(96, petConfig.petSize !== undefined ? petConfig.petSize : 420)
+    // 窗口本身永远不越过屏幕上沿：靠近顶部时改为把 Pet 内容向上移，
+    // 这样负 margin 只用于左右两侧，顶部不依赖 compositor 是否接受负 margin。
+    readonly property real windowTop: Math.max(0, pet.bodyY - bubbleReserve)
 
     width: pet.petWidth
     height: pet.petHeight + bubbleReserve
@@ -38,7 +41,7 @@ QW.Window {
     LayerShell.Window.layer: LayerShell.Window.LayerTop
     LayerShell.Window.anchors: LayerShell.Window.AnchorTop | LayerShell.Window.AnchorLeft
     LayerShell.Window.margins.left: pet.bodyX
-    LayerShell.Window.margins.top: pet.bodyY - bubbleReserve
+    LayerShell.Window.margins.top: win.windowTop
     LayerShell.Window.margins.right: 0
     LayerShell.Window.margins.bottom: 0
     // -1 = 不占工作区、不把其它窗口挤开。
@@ -48,7 +51,7 @@ QW.Window {
     Pet {
         id: pet
         x: 0
-        y: win.bubbleReserve
+        y: pet.bodyY - win.windowTop
         width: win.petWidthForPet
         height: win.petWidthForPet * 9 / 16
         layerMode: true
@@ -86,7 +89,7 @@ QW.Window {
         onLoaded: {
             item.targetWindow = win;
             item.pet = pet;
-            item.topPad = win.bubbleReserve;
+            item.topPad = pet.y;
         }
         onStatusChanged: if (status === Loader.Error) {
             console.warn("[deepseek-pet] input mask unavailable, transparent area will block clicks");
