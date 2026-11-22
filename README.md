@@ -6,9 +6,9 @@
 >
 > | 包 | 动画分辨率 | 大小 |
 > | --- | --- | --- |
-> | `dist/deepseek大肥鱼-FULL.plasmoid` | 384×216 | 132 MB |
-> | `dist/deepseek大肥鱼-SMALL.plasmoid` | 320×180 | 84 MB |
-> | `dist/deepseek大肥鱼-SMALLEST.plasmoid` | 256×144 | 48 MB |
+> | `dist/deepseek大肥鱼-Full.plasmoid` | 384×216 | 132 MB |
+> | `dist/deepseek大肥鱼-Standard.plasmoid` | 320×180 | 84 MB |
+> | `dist/deepseek大肥鱼-Low.plasmoid` | 256×144 | 48 MB |
 
 ## 功能
 
@@ -48,13 +48,13 @@
 ### 方式一：命令行
 
 ```bash
-kpackagetool6 -t Plasma/Applet -i dist/deepseek大肥鱼-FULL.plasmoid
+kpackagetool6 -t Plasma/Applet -i dist/deepseek大肥鱼-Full.plasmoid
 ```
 
 升级已安装版本：
 
 ```bash
-kpackagetool6 -t Plasma/Applet -u dist/deepseek大肥鱼-FULL.plasmoid
+kpackagetool6 -t Plasma/Applet -u dist/deepseek大肥鱼-Full.plasmoid
 ```
 
 卸载：
@@ -65,7 +65,7 @@ kpackagetool6 -t Plasma/Applet -r com.github.iamlinxuhan.deepseekpet
 
 ### 方式二：图形界面
 
-右键桌面 → **添加组件** → **从文件安装组件**，选择 `deepseek大肥鱼-FULL.plasmoid`；然后在组件列表里搜索「DeepSeek 大肥鱼」并拖到桌面。
+右键桌面 → **添加组件** → **从文件安装组件**，选择 `deepseek大肥鱼-Full.plasmoid`；然后在组件列表里搜索「DeepSeek 大肥鱼」并拖到桌面。
 
 安装后如果没有立刻出现，可以重新登录一次 Plasma 会话，或执行 `kquitapp6 plasmashell && kstart plasmashell`。
 
@@ -117,7 +117,7 @@ kpackagetool6 -t Plasma/Applet -r com.github.iamlinxuhan.deepseekpet
 ./tools/install.sh
 ```
 
-构建产物在 `dist/deepseek大肥鱼-FULL.plasmoid`。`package/` 是可直接安装的 KPackage 目录。
+构建产物在 `dist/deepseek大肥鱼-Full.plasmoid`。`package/` 是可直接安装的 KPackage 目录。
 
 ### 重新生成动画素材
 

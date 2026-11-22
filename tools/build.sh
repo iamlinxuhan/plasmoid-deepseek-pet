@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PKG="$ROOT/package"
 DIST="$ROOT/dist"
-OUT="$DIST/deepseek大肥鱼-FULL.plasmoid"
+OUT="$DIST/deepseek大肥鱼-Full.plasmoid"
 
 mkdir -p "$DIST"
 rm -f "$OUT"
