@@ -89,7 +89,6 @@ QW.Window {
         onLoaded: {
             item.targetWindow = win;
             item.pet = pet;
-            item.topPad = pet.y;
         }
         onStatusChanged: if (status === Loader.Error) {
             console.warn("[deepseek-pet] input mask unavailable, transparent area will block clicks");

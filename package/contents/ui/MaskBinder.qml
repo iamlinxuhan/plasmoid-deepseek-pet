@@ -9,10 +9,11 @@ import "petmask"
 Item {
     property var targetWindow: null
     property var pet: null
-    property real topPad: 0
 
     WindowMask {
         window: targetWindow
-        rects: pet ? [Qt.rect(pet.hitX, topPad + pet.hitY, pet.hitW, pet.hitH)] : []
+        // pet.y 是 Pet 在其父窗口内的坐标；直接参与绑定，
+        // 避免加载时取一次 0 之后再也不更新。
+        rects: pet ? [Qt.rect(pet.hitX, pet.y + pet.hitY, pet.hitW, pet.hitH)] : []
     }
 }
