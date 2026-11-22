@@ -56,7 +56,10 @@ QW.Window {
         screenHeight: Screen.height
         workWidth: Screen.desktopAvailableWidth
         workHeight: Screen.desktopAvailableHeight
-        bottomInset: 56
+        // desktopAvailableHeight 在部分 Wayland/浮动面板配置下等于整屏高度；
+        // 这时退回 Plasma 默认面板厚度 44px，保证脚底正好贴住任务栏上沿。
+        bottomInset: Screen.height - Screen.desktopAvailableHeight > 0
+                     ? Screen.height - Screen.desktopAvailableHeight : 44
         topReserve: win.bubbleReserve
         petSize: win.petConfig.petSize !== undefined ? win.petConfig.petSize : 420
         allowRoam: win.petConfig.allowRoam !== undefined ? win.petConfig.allowRoam : true

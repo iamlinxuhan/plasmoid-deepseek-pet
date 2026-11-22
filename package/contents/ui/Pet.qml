@@ -938,7 +938,8 @@ Item {
         // 负 margin 在 Layer Shell 里允许：画框可以探出屏幕，身体边缘才真正碰到屏幕边缘。
         var minX = -sideAllow;
         var maxX = roamW - petWidth + sideAllow;
-        var minY = layerMode ? topReserve : 0;
+        // 画框顶部有 60/360 的透明留白；bodyY 取 -hitY 时，身体框正好贴住屏幕上沿。
+        var minY = layerMode ? -hitY : 0;
         var maxY = Math.max(minY, roamH - petHeight + feetPad);
         var friction = Math.max(0, 1 - 2.5 * sdt);
 
@@ -1019,9 +1020,10 @@ Item {
         if (layerMode) {
             var screenMinX = -sideAllow;
             var screenMaxX = Math.max(screenMinX, roamW - petWidth + sideAllow);
-            var screenMaxY = Math.max(topReserve, roamH - petHeight + feetPad);
+            var screenMinY = -hitY;
+            var screenMaxY = Math.max(screenMinY, roamH - petHeight + feetPad);
             bodyX = Math.max(screenMinX, Math.min(bodyX, screenMaxX));
-            bodyY = Math.max(topReserve, Math.min(bodyY, screenMaxY));
+            bodyY = Math.max(screenMinY, Math.min(bodyY, screenMaxY));
             return;
         }
         var minX = -sideAllow;
@@ -1038,7 +1040,7 @@ Item {
         dragging = false;
         pressing = false;
         var margin = 24;
-        var top = layerMode ? topReserve : 0;
+        var top = layerMode ? -hitY : 0;
         var maxY = Math.max(top, roamH - petHeight + feetPad);
         if (startCorner === 0) {
             bodyX = margin;
