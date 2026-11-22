@@ -8,6 +8,9 @@ PlasmoidItem {
 
     // 桌宠不应该有小组件卡片背景。
     Plasmoid.backgroundHints: "NoBackground"
+    // 桌面组件重登后会被 Plasma 恢复成 compact 图标；强制始终用完整表示，
+    // 才会实例化 fullRepresentation 里的 Layer Shell 窗口。
+    preferredRepresentation: fullRepresentation
     toolTipMainText: "DeepSeek 大肥鱼"
     toolTipSubText: {
         if (layerReady) {
@@ -154,31 +157,9 @@ PlasmoidItem {
             }
         }
 
-        // 悬浮窗模式下，桌面上只留一个小锚点：左键显示/隐藏宠物，桌面菜单里可配置/移除组件。
-        Item {
-            id: anchor
-            visible: root.layerReady
-            width: 48
-            height: 48
-            anchors.left: parent.left
-            anchors.top: parent.top
-
-            Image {
-                anchors.fill: parent
-                anchors.margins: 4
-                source: Qt.resolvedUrl("assets/images/logo.png")
-                fillMode: Image.PreserveAspectFit
-                opacity: 0.72
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.petVisible = !root.petVisible
-            }
-        }
-
+        // 桌面组件本身不画任何图标或点击热区：桌宠只由上面的 Layer Shell
+        // 窗口呈现。这样壁纸中央不会多出一个应用图标，也不会吞掉桌面点击。
+        // 需要隐藏/移除组件时，用桌面右键菜单或 Plasma 编辑模式。
         // 降级模式：X11 或 Layer Shell 模块缺失时才创建；Layer Shell 可用时
         // 这份 Pet 会被销毁，避免两个实例同时报时/散步/读占用。
         Component {
