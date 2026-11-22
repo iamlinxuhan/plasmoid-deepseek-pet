@@ -1,4 +1,4 @@
-# B 站 / 抖音发布文案（v1.1.2）
+# B 站 / 抖音发布文案（v1.1.3）
 
 视频：`promo/deepseek-pet-promo-4k60.mp4`（4096×2560，60fps，49.5s，含原创配乐，仅本地保留，不上传 GitHub）
 封面：B 站 `store/bilibili-cover.png`；抖音 `store/douyin-cover.png`
