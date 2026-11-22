@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PKG="$ROOT/dist/deepseek大肥鱼.plasmoid"
+PKG="$ROOT/dist/deepseek大肥鱼-FULL.plasmoid"
 
 if [ ! -f "$PKG" ]; then
     "$ROOT/tools/build.sh"
